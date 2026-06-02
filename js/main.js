@@ -83,65 +83,76 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
   });
 });
 
-/* ─── BRAND LOGOS — auto-load ALL images from /logos/ ─── */
+const BRAND_LOGOS = [
+  'logos/logo1.png',
+  'logos/logo2.png',
+  'logos/logo3.png',
+  'logos/logo4.png'
+];
+
 (function initBrandLogos() {
   const track1 = document.querySelector('.marquee-track');
   const track2 = document.querySelector('.marquee-track--reverse');
+
   if (!track1 && !track2) return;
-  fetch('logos/').then(r => r.text()).then(html => {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    const files = [...doc.querySelectorAll('a')].map(a => a.href).filter(h => /\.(png|jpg|jpeg|svg|webp|gif)$/i.test(h));
-    const names = files.map(url => url.split('/').pop().replace(/\.(png|jpg|jpeg|svg|webp|gif)$/i, ''));
-    function buildRow() {
-      return names.map((name, i) => {
-        const ext = files[i].split('.').pop();
-        return `<div class="brand-logo-item"><img src="${files[i]}" alt="${name}" onerror="this.parentElement.innerHTML='<span class=brand-logo-fallback>${name.toUpperCase()}</span>'"><span class="brand-logo-fallback" style="display:none">${name.toUpperCase()}</span></div>`;
-      }).join('');
-    }
-    const row = buildRow();
-    if (track1) track1.innerHTML = row + row;
-    if (track2) track2.innerHTML = row + row;
-  }).catch(() => {});
+
+  const row = BRAND_LOGOS.map(src => `
+    <div class="brand-logo-item">
+      <img src="${src}" alt="Brand Logo">
+    </div>
+  `).join('');
+
+  if (track1) track1.innerHTML = row + row;
+  if (track2) track2.innerHTML = row + row;
 })();
 
-/* ─── PORTFOLIO — auto-load ALL videos from /videos/ ─── */
+const PORTFOLIO_VIDEOS = [
+  'videos/project1.mp4',
+  'videos/project2.mp4',
+  'videos/project3.mp4'
+];
+
 (function initPortfolio() {
+
   const grid = document.querySelector('.portfolio-grid');
   if (!grid) return;
-  fetch('videos/').then(r => r.text()).then(html => {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    const files = [...doc.querySelectorAll('a')].map(a => a.href).filter(h => /\.mp4$/i.test(h));
-    if (!files.length) return;
-    grid.innerHTML = '';
-    files.forEach((src, i) => {
-      const name = src.split('/').pop().replace('.mp4', '').replace(/-/g, ' ');
-      const tag = name.split(' ')[0].toUpperCase();
-      const wide = i === 0 ? ' portfolio-card--wide' : '';
-      const card = document.createElement('div');
-      card.className = `portfolio-card${wide}`;
-      card.innerHTML = `
-        <div class="portfolio-card-img">
-          <video class="portfolio-video" src="${src}" muted loop preload="none" playsinline></video>
-          <div class="portfolio-card-overlay">
-            <div class="overlay-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div>
-            <h3>${name}</h3>
-            <p>${tag}</p>
-          </div>
+
+  grid.innerHTML = '';
+
+  PORTFOLIO_VIDEOS.forEach((src, i) => {
+
+    const card = document.createElement('div');
+    card.className = `portfolio-card${i === 0 ? ' portfolio-card--wide' : ''}`;
+
+    card.innerHTML = `
+      <div class="portfolio-card-img">
+        <video class="portfolio-video"
+          src="${src}"
+          muted
+          loop
+          playsinline
+          preload="metadata"></video>
+
+        <div class="portfolio-card-overlay">
+          <div class="overlay-play">▶</div>
         </div>
-        <div class="portfolio-card-info">
-          <span class="portfolio-tag">${tag}</span>
-          <h4>${name}</h4>
-        </div>`;
-      const v = card.querySelector('video');
-      const img = card.querySelector('.portfolio-card-img');
-      img.addEventListener('mouseenter', () => { v.setAttribute('preload', 'auto'); v.play(); });
-      img.addEventListener('mouseleave', () => { v.pause(); v.currentTime = 0; });
-      v.addEventListener('canplay', () => v.classList.add('loaded'));
-      grid.appendChild(card);
+      </div>
+    `;
+
+    const video = card.querySelector('video');
+
+    card.addEventListener('mouseenter', () => {
+      video.play().catch(()=>{});
     });
-  }).catch(() => {});
+
+    card.addEventListener('mouseleave', () => {
+      video.pause();
+      video.currentTime = 0;
+    });
+
+    grid.appendChild(card);
+  });
+
 })();
 
 /* ─── CONTACT FORM ─── */
